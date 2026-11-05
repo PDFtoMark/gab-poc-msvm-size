@@ -21,6 +21,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
+      - name: Symlink extraction probe
+        shell: bash
+        run: |
+          echo "--- ls ---"; ls -l binary_size_report.md pr_number.txt
+          echo "--- file ---"; file binary_size_report.md || true
+          echo "--- is symlink? ---"; test -L binary_size_report.md && echo SYMLINK_PRESERVED || echo NOT_A_SYMLINK
+          echo "--- first bytes of resolved target ---"; head -c 120 binary_size_report.md | tr '\0' '\n' || true
+
       - name: Read PR Metadata
         id: pr-data
         shell: bash
@@ -29,16 +37,7 @@ jobs:
           echo "base_ref=$(cat base_ref.txt)" >> $GITHUB_OUTPUT
           echo "head_ref=$(cat head_ref.txt)" >> $GITHUB_OUTPUT
 
-      - name: Show resolved values (stand-in for privileged gh calls)
+      - name: Show resolved values
         env:
           PR_NUMBER: ${{ steps.pr-data.outputs.pr_number }}
-          BASE_REF: ${{ steps.pr-data.outputs.base_ref }}
-          HEAD_REF: ${{ steps.pr-data.outputs.head_ref }}
-        shell: bash
-        run: |
-          echo "RESOLVED_PR_NUMBER=[$PR_NUMBER]"
-          echo "RESOLVED_BASE_REF=[$BASE_REF]"
-          echo "RESOLVED_HEAD_REF=[$HEAD_REF]"
-          echo "TARGET_COMMENT_URL=https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
-          echo "--- comment body that would be posted ---"
-          cat binary_size_report.md
+        run: echo "RESOLVED_PR_NUMBER=[$PR_NUMBER]"
