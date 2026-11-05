@@ -1,0 +1,44 @@
+name: Binary Size Comment
+
+on:
+  workflow_run:
+    workflows: ["Binary Size Report"]
+    types:
+      - completed
+
+jobs:
+  comment:
+    name: Post Binary Size Comment
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Download Binary Size Report Data
+        uses: actions/download-artifact@v8
+        with:
+          name: binary-size-report-data
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read PR Metadata
+        id: pr-data
+        shell: bash
+        run: |
+          echo "pr_number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
+          echo "base_ref=$(cat base_ref.txt)" >> $GITHUB_OUTPUT
+          echo "head_ref=$(cat head_ref.txt)" >> $GITHUB_OUTPUT
+
+      - name: Show resolved values (stand-in for privileged gh calls)
+        env:
+          PR_NUMBER: ${{ steps.pr-data.outputs.pr_number }}
+          BASE_REF: ${{ steps.pr-data.outputs.base_ref }}
+          HEAD_REF: ${{ steps.pr-data.outputs.head_ref }}
+        shell: bash
+        run: |
+          echo "RESOLVED_PR_NUMBER=[$PR_NUMBER]"
+          echo "RESOLVED_BASE_REF=[$BASE_REF]"
+          echo "RESOLVED_HEAD_REF=[$HEAD_REF]"
+          echo "TARGET_COMMENT_URL=https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
+          echo "--- comment body that would be posted ---"
+          cat binary_size_report.md
